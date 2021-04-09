@@ -1,6 +1,6 @@
 const { context } = require('@actions/github');
 
-function buildSlackAttachments({ status, color, github }) {
+function buildSlackAttachments({ status, color, github, skipFields }) {
   const { payload, ref, workflow, eventName } = github.context;
   const { owner, repo } = context.repo;
   const event = eventName;
@@ -9,45 +9,61 @@ function buildSlackAttachments({ status, color, github }) {
   const sha = event === 'pull_request' ? payload.pull_request.head.sha : github.context.sha;
   const runId = parseInt(process.env.GITHUB_RUN_ID, 10);
 
-  const referenceLink =
-    event === 'pull_request'
-      ? {
-          title: 'Pull Request',
-          value: `<${payload.pull_request.html_url} | ${payload.pull_request.title}>`,
-          short: true,
-        }
-      : {
-          title: 'Branch',
-          value: `<https://github.com/${owner}/${repo}/commit/${sha} | ${branch}>`,
-          short: true,
-        };
+  const skipFieldSet = new Set(skipFields);
+  const fields = [];
+
+  if (!skipFieldSet.has('repo')) {
+    fields.push({
+      title: 'Repo',
+      value: `<https://github.com/${owner}/${repo} | ${owner}/${repo}>`,
+      short: true,
+    });
+  }
+
+  if (!skipFieldSet.has('workflow')) {
+    fields.push({
+      title: 'Workflow',
+      value: `<https://github.com/${owner}/${repo}/actions/runs/${runId} | ${workflow}>`,
+      short: true,
+    });
+  }
+
+  if (!skipFieldSet.has('status')) {
+    fields.push({
+      title: 'Status',
+      value: status,
+      short: true,
+    });
+  }
+
+  if (!skipFieldSet.has('ref')) {
+    const referenceLink =
+        event === 'pull_request'
+            ? {
+              title: 'Pull Request',
+              value: `<${payload.pull_request.html_url} | ${payload.pull_request.title}>`,
+              short: true,
+            }
+            : {
+              title: 'Branch',
+              value: `<https://github.com/${owner}/${repo}/commit/${sha} | ${branch}>`,
+              short: true,
+            };
+    fields.push(referenceLink);
+  }
+
+  if (!skipFieldSet.has('event')) {
+    fields.push({
+      title: 'Event',
+      value: event,
+      short: true,
+    });
+  }
 
   return [
     {
       color,
-      fields: [
-        {
-          title: 'Repo',
-          value: `<https://github.com/${owner}/${repo} | ${owner}/${repo}>`,
-          short: true,
-        },
-        {
-          title: 'Workflow',
-          value: `<https://github.com/${owner}/${repo}/actions/runs/${runId} | ${workflow}>`,
-          short: true,
-        },
-        {
-          title: 'Status',
-          value: status,
-          short: true,
-        },
-        referenceLink,
-        {
-          title: 'Event',
-          value: event,
-          short: true,
-        },
-      ],
+      fields: fields,
       footer_icon: 'https://github.githubassets.com/favicon.ico',
       footer: `<https://github.com/${owner}/${repo} | ${owner}/${repo}>`,
       ts: Math.floor(Date.now() / 1000),
