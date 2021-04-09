@@ -23,6 +23,9 @@ inputs:
   skip_fields:
     description: 'Fields to skip in Slack attachment. Comma separated list of `repo`, `workflow`, `status`, `ref`, and `event`.'
     required: false
+  message:
+    description: 'Extra message.'
+    required: false
 outputs:
   message_id:
     description: 'The unique timestamp identifier of the Slack message sent'

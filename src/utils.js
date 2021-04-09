@@ -1,6 +1,6 @@
 const { context } = require('@actions/github');
 
-function buildSlackAttachments({ status, color, github, skipFields }) {
+function buildSlackAttachments({ status, color, github, skipFields, message }) {
   const { payload, ref, workflow, eventName } = github.context;
   const { owner, repo } = context.repo;
   const event = eventName;
@@ -38,17 +38,17 @@ function buildSlackAttachments({ status, color, github, skipFields }) {
 
   if (!skipFieldSet.has('ref')) {
     const referenceLink =
-        event === 'pull_request'
-            ? {
-              title: 'Pull Request',
-              value: `<${payload.pull_request.html_url} | ${payload.pull_request.title}>`,
-              short: true,
-            }
-            : {
-              title: 'Branch',
-              value: `<https://github.com/${owner}/${repo}/commit/${sha} | ${branch}>`,
-              short: true,
-            };
+      event === 'pull_request'
+        ? {
+            title: 'Pull Request',
+            value: `<${payload.pull_request.html_url} | ${payload.pull_request.title}>`,
+            short: true,
+          }
+        : {
+            title: 'Branch',
+            value: `<https://github.com/${owner}/${repo}/commit/${sha} | ${branch}>`,
+            short: true,
+          };
     fields.push(referenceLink);
   }
 
@@ -57,6 +57,14 @@ function buildSlackAttachments({ status, color, github, skipFields }) {
       title: 'Event',
       value: event,
       short: true,
+    });
+  }
+
+  if (message) {
+    fields.push({
+      title: 'Message',
+      value: message,
+      short: false,
     });
   }
 

@@ -8,6 +8,7 @@ const { buildSlackAttachments, formatChannelName } = require('./src/utils');
     const channel = core.getInput('channel');
     const status = core.getInput('status');
     const color = core.getInput('color');
+    const message = core.getInput('message', { required: false });
     const messageId = core.getInput('message_id');
     const skipFieldsInput = core.getInput('skip_fields', { required: false });
     const token = process.env.SLACK_BOT_TOKEN;
@@ -19,7 +20,7 @@ const { buildSlackAttachments, formatChannelName } = require('./src/utils');
     }
 
     const skipFields = (skipFieldsInput || '').split(',');
-    const attachments = buildSlackAttachments({ status, color, github, skipFields });
+    const attachments = buildSlackAttachments({ status, color, github, skipFields, message });
     const channelId = core.getInput('channel_id') || (await lookUpChannelId({ slack, channel }));
 
     if (!channelId) {
